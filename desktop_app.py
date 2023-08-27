@@ -4,6 +4,7 @@ from tkinter import ttk
 import clipboard
 import threading
 from googletrans import Translator
+import json
 
 
 class GUIThread(threading.Thread):
@@ -16,6 +17,15 @@ class GUIThread(threading.Thread):
 
     def run(self):
         self.create_gui()
+
+    def save_settings(self, src_language, dest_language):
+        to_save = {
+            "src_language": src_language,
+            "dest_language": dest_language
+        }
+
+        with open("Translaterra_settings.json", "w") as file:
+            json.dump(to_save, file)
 
     def translate_clipboard(self, clipboard_text, src_language, dest_language):
         if src_language == "Auto Detect":
@@ -33,6 +43,7 @@ class GUIThread(threading.Thread):
 
             selected_original_language = self.original_lang_combobox.get()
             selected_translate_language = self.translated_lang_combobox.get()
+            self.save_settings(selected_original_language, selected_translate_language)
             translation = self.translate_clipboard(original_text, selected_original_language, selected_translate_language)
 
             if translation:
@@ -49,6 +60,7 @@ class GUIThread(threading.Thread):
 
         selected_original_language = self.original_lang_combobox.get()
         selected_translate_language = self.translated_lang_combobox.get()
+        self.save_settings(selected_original_language, selected_translate_language)
         translation = self.translate_clipboard(clipboard_text, selected_original_language, selected_translate_language)
         if translation:
             self.translated_text.insert(tk.END, translation)
@@ -101,8 +113,11 @@ class GUIThread(threading.Thread):
                                      bg=text_bg, fg=text_fg, font=text_font, insertbackground=text_fg)
         self.original_text.pack()
 
+        with open("Translaterra_settings.json", "r") as file:
+            settings = json.load(file)
+
         self.original_lang_combobox = ttk.Combobox(original_frame, values=["Auto Detect"] + self.languages, state="readonly")
-        self.original_lang_combobox.set("Auto Detect")
+        self.original_lang_combobox.set(settings["src_language"])
         self.original_lang_combobox.pack()
 
         self.translated_text = tk.Text(translated_frame, wrap=tk.NONE, width=40, height=10, state=tk.DISABLED,
@@ -110,7 +125,7 @@ class GUIThread(threading.Thread):
         self.translated_text.pack()
 
         self.translated_lang_combobox = ttk.Combobox(translated_frame, values=self.languages, state="readonly")
-        self.translated_lang_combobox.set("English")
+        self.translated_lang_combobox.set(settings["dest_language"])
         self.translated_lang_combobox.pack()
 
         root.mainloop()
