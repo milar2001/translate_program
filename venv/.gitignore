@@ -1,0 +1,22 @@
+# Pliki i katalogi generowane przez Python
+__pycache__/
+
+# Środowiska wirtualne
+venv/
+env/
+
+# Katalogi IDE
+.idea/
+.vscode/
+*.vscode/
+
+# Katalogi środowisk wirtualnych
+/.venv/
+
+# Katalogi wygenerowane przez narzędzia do budowy projektu
+/build/
+/dist/
+*.egg-info/
+
+# Pliki dołączone do dokumentacji
+/docs/_build/
