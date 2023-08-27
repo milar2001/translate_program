@@ -1,10 +1,13 @@
 import tkinter as tk
+import pystray
 from googletrans import LANGUAGES
 from tkinter import ttk
 import clipboard
 import threading
 from googletrans import Translator
 import json
+from PIL import Image
+from pystray import MenuItem as item
 
 
 class GUIThread(threading.Thread):
@@ -17,6 +20,7 @@ class GUIThread(threading.Thread):
 
     def run(self):
         self.create_gui()
+
 
     def save_settings(self, src_language, dest_language):
         to_save = {
@@ -65,6 +69,7 @@ class GUIThread(threading.Thread):
         if translation:
             self.translated_text.insert(tk.END, translation)
         self.translated_text.config(state=tk.DISABLED)
+        self.create_gui.show_window()
 
     def translate_clipboard_text(self):
         self.original_text.delete("1.0", tk.END)
@@ -127,6 +132,23 @@ class GUIThread(threading.Thread):
         self.translated_lang_combobox = ttk.Combobox(translated_frame, values=self.languages, state="readonly")
         self.translated_lang_combobox.set(settings["dest_language"])
         self.translated_lang_combobox.pack()
+
+        def quit_window(icon, item):
+            icon.stop()
+            root.destroy()
+
+        def show_window(icon, item):
+            icon.stop()
+            root.after(0, root.deiconify())
+
+        def hide_window():
+            root.withdraw()
+            image = Image.open("icon.png")
+            menu = ( item('Show', show_window), item('Quit', quit_window))
+            icon = pystray.Icon("name", image, "My System Tray Icon", menu)
+            icon.run()
+
+        root.protocol('WM_DELETE_WINDOW', hide_window)
 
         root.mainloop()
 
