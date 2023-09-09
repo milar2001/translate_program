@@ -17,10 +17,10 @@ class GUIThread(threading.Thread):
         self.translated_text = None
         self.translator = Translator()
         self.languages = list(LANGUAGES.values())
+        self.root = tk.Tk()
 
     def run(self):
         self.create_gui()
-
 
     def save_settings(self, src_language, dest_language):
         to_save = {
@@ -28,7 +28,7 @@ class GUIThread(threading.Thread):
             "dest_language": dest_language
         }
 
-        with open("Translaterra_settings.json", "w") as file:
+        with open("settings.json", "w") as file:
             json.dump(to_save, file)
 
     def translate_clipboard(self, clipboard_text, src_language, dest_language):
@@ -69,7 +69,6 @@ class GUIThread(threading.Thread):
         if translation:
             self.translated_text.insert(tk.END, translation)
         self.translated_text.config(state=tk.DISABLED)
-        self.create_gui.show_window()
 
     def translate_clipboard_text(self):
         self.original_text.delete("1.0", tk.END)
@@ -81,13 +80,13 @@ class GUIThread(threading.Thread):
         self.activate_and_translate()
 
     def create_gui(self):
-        root = tk.Tk()
-        root.title("Text Translator App")
-        root.configure(bg="black")
+        self.root = tk.Tk()
+        self.root.title("Text Translator App")
+        self.root.configure(bg="black")
 
-        root.resizable(False, False)
+        self.root.resizable(False, False)
 
-        main_frame = tk.Frame(root, bg="black")
+        main_frame = tk.Frame(self.root, bg="black")
         main_frame.pack(padx=10, pady=10)
 
         original_frame = tk.Frame(main_frame, width=300, height=300, bg="black")
@@ -110,7 +109,7 @@ class GUIThread(threading.Thread):
         text_bg = "black"
         text_fg = "white"
 
-        translate_button = tk.Button(root, text="Translate", command=self.translate_text,
+        translate_button = tk.Button(self.root, text="Translate", command=self.translate_text,
                                      bg="#007ACC", fg="white", font=("Helvetica", 16, "bold"))
         translate_button.pack(pady=10)
 
@@ -118,7 +117,7 @@ class GUIThread(threading.Thread):
                                      bg=text_bg, fg=text_fg, font=text_font, insertbackground=text_fg)
         self.original_text.pack()
 
-        with open("Translaterra_settings.json", "r") as file:
+        with open("settings.json", "r") as file:
             settings = json.load(file)
 
         self.original_lang_combobox = ttk.Combobox(original_frame, values=["Auto Detect"] + self.languages, state="readonly")
@@ -133,24 +132,24 @@ class GUIThread(threading.Thread):
         self.translated_lang_combobox.set(settings["dest_language"])
         self.translated_lang_combobox.pack()
 
-        def quit_window(icon, item):
+        def quit_window(icon):
             icon.stop()
-            root.destroy()
+            self.root.destroy()
 
-        def show_window(icon, item):
-            icon.stop()
-            root.after(0, root.deiconify())
+        def show_window(icon=None):
+            self.root.deiconify()
+            if icon:
+                icon.stop()
 
         def hide_window():
-            root.withdraw()
+            self.root.withdraw()
             image = Image.open("icon.png")
-            menu = ( item('Show', show_window), item('Quit', quit_window))
+            menu = (item('Show', show_window), item('Quit', quit_window))
             icon = pystray.Icon("name", image, "My System Tray Icon", menu)
             icon.run()
 
-        root.protocol('WM_DELETE_WINDOW', hide_window)
-
-        root.mainloop()
+        self.root.protocol('WM_DELETE_WINDOW', hide_window)
+        self.root.mainloop()
 
 
 if __name__ == "__main__":
